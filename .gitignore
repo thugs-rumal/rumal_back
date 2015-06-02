@@ -16,4 +16,4 @@ Thumbs.db
 .*.swp
 
 # Ignore Django secret_key
-rumal/secret_key.py
+rumal_back/secret_key.py
