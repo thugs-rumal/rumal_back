@@ -59,7 +59,7 @@ Now you can setup the database (which, for now, uses SQLite as the backend) and 
 
 ## Running Rumal's backend
 
-First of all, you will need to run the backend daemon:
+First of all, you will need to run the backend daemon. **IMPORTANT: please make sure that the user you run the backend daemon with can run Docker images** (e.g. run it as `root` or add it to the `docker` group or create a `sudoers` entry to allow it to run `/usr/bin/docker without password`, whatever).
 
     $ python manage.py run_thug
 
