@@ -149,6 +149,7 @@ class Command(BaseCommand):
         signal.alarm(5*60) # 5 minutes
         try:
             stdout, stderr = p.communicate()
+            signal.alarm(0)  # reset the alarm
         except TimeoutException:
             logger.error("[{}] Execution was taking too long, killed".format(task.id))
             raise
