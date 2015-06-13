@@ -16,6 +16,7 @@ v1_api.register(SampleResource())
 v1_api.register(CertificateResource())
 v1_api.register(ExploitResource())
 v1_api.register(GraphResource())
+v1_api.register(ComboResource())
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
