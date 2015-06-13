@@ -97,3 +97,8 @@ class Task(models.Model):
     no_javaplugin   = models.BooleanField("Enable/ Disable Java plugin", null=False, blank=True, default=False)
     def __unicode__(self):
         return self.object_id
+
+# Models for MongoDB objects
+class Document(dict):
+    # dictionary-like object for mongodb documents.
+    __getattr__ = dict.get
