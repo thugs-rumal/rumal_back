@@ -31,6 +31,12 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from main.models import *
 
+import pymongo
+from bson import ObjectId
+
+client = pymongo.MongoClient()
+db = client.thug
+
 logger = logging.getLogger(__name__)
 
 class TimeoutException(Exception):
@@ -67,6 +73,60 @@ class Command(BaseCommand):
         task.completed_on = datetime.now(pytz.timezone(settings.TIME_ZONE))
         task.status = STATUS_COMPLETED
         task.save()
+
+    def urlid_to_url(self,document):
+        document["url"] = db.urls.find_one({"_id":ObjectId(document["url_id"])})["url"]
+        document.pop("url_id")
+        return document
+
+    def remove_analysis_id(self,document):
+        document.pop("analysis_id")
+        document.pop("_id")
+        return document
+
+    def id_to_old_id(self,document):
+        document["old_id"]= document.pop("_id")
+        return document
+
+    def club_collections(self,analysis_id):
+        analysis = db.analyses.find_one({"_id":ObjectId(analysis_id)})
+        analysis["exploits"] = [self.remove_analysis_id(self.urlid_to_url(x)) for x in db.exploits.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["codes"] = [self.remove_analysis_id(x) for x in db.codes.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["behaviors"] = [self.remove_analysis_id(x) for x in db.behaviors.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["certificates"] = [self.remove_analysis_id(urlid_to_url(x)) for x in db.certificates.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["maec11"] = [self.remove_analysis_id(x) for x in db.maec11.find({"analysis_id":ObjectId(analysis_id)})]
+        first_url = db.urls.find_one({"_id":ObjectId(analysis["url_id"])})
+        first_url["old_id"] = first_url.pop("_id")
+        analysis["url_map"] = [first_url] #for further grid_fs maps id to url
+        analysis = self.urlid_to_url(analysis)
+        analysis.pop("_id")
+        #now cleaning connections
+        #using urls instead of url_ids
+        connections = [self.remove_analysis_id(x) for x in db.connections.find({"analysis_id":ObjectId(analysis_id)})]
+        for x in connections:
+            # x.pop("analysis_id")
+            # x.pop()
+            x["source_url"] = db.urls.find_one({"_id":ObjectId(x["source_id"])})["url"]
+            temp = db.urls.find_one({"_id":ObjectId(x["destination_id"])})
+            if temp not in analysis["url_map"]:
+                temp["old_id"]= temp.pop("_id")
+                analysis["url_map"].append(temp)
+            x["destination_url"] = temp["url"]
+            x.pop("source_id")
+            x.pop("destination_id")
+
+        analysis["connections"] = connections
+
+        # preserving all grid_fs related
+        # collections as it is
+
+        analysis["locations"] = [self.id_to_old_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["virustotal"] = [self.id_to_old_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["honeyagent"] = [self.id_to_old_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["androguard"] = [self.id_to_old_id(x) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["peepdf"] = [x for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
+        
+        return analysis
 
     def run_task(self, task):
         # Initialize args list for docker
@@ -157,10 +217,12 @@ class Command(BaseCommand):
         r = re.search(r'\[MongoDB\] Analysis ID: ([a-z0-9]+)\b', stdout)
         if r:
             logger.info("[{}] Got ObjectID: {}".format(task.id, r.group(1)))
-            return r.group(1)
+            final_id = db.analysiscombo.insert(self.club_collections(r.group(1)))
+            return final_id
         else:
             logger.error("[{}] Unable to get MongoDB analysis ID for the current task".format(task.id))
             raise InvalidMongoIdException("Unable to get MongoDB analysis ID for the current task")
+
 
 
     def handle(self, *args, **options):
