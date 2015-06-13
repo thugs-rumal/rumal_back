@@ -33,11 +33,14 @@ from main.models import *
 
 logger = logging.getLogger(__name__)
 
-class Alarm(Exception):
+class TimeoutException(Exception):
     pass
 
-def alarm_handler(signum, frame):
-    raise Alarm
+class InvalidMongoIdException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
 
 class Command(BaseCommand):
 
@@ -65,6 +68,100 @@ class Command(BaseCommand):
         task.status = STATUS_COMPLETED
         task.save()
 
+    def run_task(self, task):
+        # Initialize args list for docker
+        args = [
+            "/usr/bin/sudo", "/usr/bin/docker", "run",
+            "-a", "stdin",
+            "-a", "stdout",
+            "-a", "stderr",
+            "-t",
+            "pdelsante/thug",
+            "/usr/bin/python", "/opt/thug/src/thug.py"
+            ]
+
+        # Base options
+        if task.referer:
+            args.extend(['-r', task.referer])
+        if task.useragent:
+            args.extend(['-u', task.useragent])
+
+        # Proxy
+        if task.proxy:
+            args.extend(['-p', str(task.proxy)])
+
+        # Other options
+        if task.events:
+            args.extend(['-e', task.events])
+        if task.delay:
+            args.extend(['-w', task.delay])
+        if task.timeout:
+            args.extend(['-T', task.timeout])
+        if task.threshold:
+            args.extend(['-t', task.threshold])
+        if task.no_cache:
+            args.extend(['-m'])
+        if task.extensive:
+            args.extend(['-E'])
+        if task.broken_url:
+            args.extend(['-B'])
+
+        # Logging
+        if task.verbose:
+            args.extend(['-v'])
+        elif task.quiet:
+            args.extend(['-q'])
+        if task.debug:
+            args.extend(['-d'])
+            if task.ast_debug:
+                args.extend(['-a'])
+        if task.http_debug:
+            args.extend(['-g'])
+
+        # External services
+        if task.vtquery:
+            args.extend(['-y'])
+        if task.vtsubmit:
+            args.extend(['-s'])
+        if task.no_honeyagent:
+            args.extend(['-N'])
+
+        # Plugins
+        if task.no_adobepdf:
+            args.extend(['-P'])
+        elif task.adobepdf:
+            args.extend(['-A', task.adobepdf])
+        if task.no_shockwave:
+            args.extend(['-R'])
+        elif task.shockwave:
+            args.extend(['-S', task.shockwave])
+        if task.no_javaplugin:
+            args.extend(['-K'])
+        elif task.javaplugin:
+            args.extend(['-J', task.javaplugin])
+
+        # Add URL to args
+        args.append(task.url)
+
+        logger.debug("[{}] Will run command: {}".format(task.id, " ".join(args)))
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(5*60) # 5 minutes
+        try:
+            stdout, stderr = p.communicate()
+        except TimeoutException:
+            logger.error("[{}] Execution was taking too long, killed".format(task.id))
+            raise
+
+        r = re.search(r'\[MongoDB\] Analysis ID: ([a-z0-9]+)\b', stdout)
+        if r:
+            logger.info("[{}] Got ObjectID: {}".format(task.id, r.group(1)))
+            return r.group(1)
+        else:
+            logger.error("[{}] Unable to get MongoDB analysis ID for the current task".format(task.id))
+            raise InvalidMongoIdException("Unable to get MongoDB analysis ID for the current task")
+
+
     def handle(self, *args, **options):
         logger.info("Starting up run_thug daemon")
         # Reset any tasks left behind from previous runs
@@ -78,106 +175,26 @@ class Command(BaseCommand):
             logger.debug("Got {} new tasks".format(len(tasks)))
             for task in tasks:
                 self._mark_as_running(task)
-                # Initialize args list for docker
-                args = [
-                    "/usr/bin/sudo", "/usr/bin/docker", "run",
-                    "-a", "stdin",
-                    "-a", "stdout",
-                    "-a", "stderr",
-                    "-t",
-                    "pdelsante/thug",
-                    "/usr/bin/python", "/opt/thug/src/thug.py"
-                    ]
-
-                # Base options
-                if task.referer:
-                    args.extend(['-r', task.referer])
-                if task.useragent:
-                    args.extend(['-u', task.useragent])
-
-                # Proxy
-                if task.proxy:
-                    args.extend(['-p', str(task.proxy)])
-
-                # Other options
-                if task.events:
-                    args.extend(['-e', task.events])
-                if task.delay:
-                    args.extend(['-w', task.delay])
-                if task.timeout:
-                    args.extend(['-T', task.timeout])
-                if task.threshold:
-                    args.extend(['-t', task.threshold])
-                if task.no_cache:
-                    args.extend(['-m'])
-                if task.extensive:
-                    args.extend(['-E'])
-                if task.broken_url:
-                    args.extend(['-B'])
-
-                # Logging
-                if task.verbose:
-                    args.extend(['-v'])
-                elif task.quiet:
-                    args.extend(['-q'])
-                if task.debug:
-                    args.extend(['-d'])
-                    if task.ast_debug:
-                        args.extend(['-a'])
-                if task.http_debug:
-                    args.extend(['-g'])
-
-                # External services
-                if task.vtquery:
-                    args.extend(['-y'])
-                if task.vtsubmit:
-                    args.extend(['-s'])
-                if task.no_honeyagent:
-                    args.extend(['-N'])
-
-                # Plugins
-                if task.no_adobepdf:
-                    args.extend(['-P'])
-                elif task.adobepdf:
-                    args.extend(['-A', task.adobepdf])
-                if task.no_shockwave:
-                    args.extend(['-R'])
-                elif task.shockwave:
-                    args.extend(['-S', task.shockwave])
-                if task.no_javaplugin:
-                    args.extend(['-K'])
-                elif task.javaplugin:
-                    args.extend(['-J', task.javaplugin])
-
-                # Add URL to args
-                args.append(task.url)
-
-                logger.debug("[{}] Will run command: {}".format(task.id, " ".join(args)))
                 try:
-                    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    signal.signal(signal.SIGALM, alarm_handler)
-                    signal.alarm(5*60) # 5 minutes
-                    try:
-                        stdout, stderr = p.communicate()
-                    except Alarm:
-                        logger.error("[{}] Execution was taking too long, killed".format(task.id))
-                        self._mark_as_failed(task)
-                        continue
-
-                    r = re.search(r'\[MongoDB\] Analysis ID: ([a-z0-9]+)\b', stdout)
-                    if r:
-                        task.object_id = r.group(1)
-                        self._mark_as_completed(task)
-
-                    if not task.object_id:
-                        logger.error("[{}] Unable to get MongoDB analysis ID for the current task".format(task.id))
-                        self._mark_as_failed(task)
+                    task.object_id = self.run_task(task)
                 except subprocess.CalledProcessError as e:
                     logger.exception("[{}] Got CalledProcessError exception: {}".format(task.id, e))
                     self._mark_as_failed(task)
+                    continue
+                except TimeoutException as e:
+                    logger.exception("[{}] Got Timeout exception: {}".format(task.id, e))
+                    self._mark_as_failed(task)
+                    continue
+                except InvalidMongoIdException as e:
+                    logger.exception("[{}] Got InvalidMongoIdException exception: {}".format(task.id, e))
+                    self._mark_as_failed(task)
+                    continue
                 except Exception as e:
                     logger.exception("[{}] Got exception: {}".format(task.id, e))
                     self._mark_as_failed(task)
+                    continue
+
+                self._mark_as_completed(task)
 
             # Sleep for 10 seconds when no pending tasks
             logger.info("Sleeping for {} seconds waiting for new tasks".format(10))
