@@ -258,6 +258,8 @@ class ComboResource(MongoDBResource):
         object_class    = Document
         collection      = "analysiscombo"
         detail_uri_name = "_id"
+        excludes = ["id",]
+        include_resource_uri = False
 
 class StatusResource(ModelResource):
 
