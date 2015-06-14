@@ -268,7 +268,7 @@ class StatusResource(ModelResource):
         authorization   = Authorization()
         allowed_methods = ['get', 'post']
         detail_uri_name = 'frontend_id'
-        fields = ["status"]
+        fields = ["status","object_id"]
     def prepend_urls(self):
         return [
             url(r"^(?P<resource_name>%s)/(?P<frontend_id>[\w\d_.-]+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
