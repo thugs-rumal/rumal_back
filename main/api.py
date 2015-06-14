@@ -17,6 +17,8 @@ from tastypie.authorization import Authorization
 from main.models import *
 from main.resources import MongoDBResource
 
+from django.conf.urls import url
+
 """
 Resources for SQLite models
 """
@@ -256,3 +258,19 @@ class ComboResource(MongoDBResource):
         object_class    = Document
         collection      = "analysiscombo"
         detail_uri_name = "_id"
+
+class StatusResource(ModelResource):
+
+    class Meta:
+        queryset        = Task.objects.all()
+        resource_name   = 'status'
+        authentication  = ApiKeyAuthentication()
+        authorization   = Authorization()
+        allowed_methods = ['get', 'post']
+        detail_uri_name = 'frontend_id'
+        fields = ["status"]
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/(?P<frontend_id>[\w\d_.-]+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
+            url(r"^(?P<resource_name>%s)/set/(?P<frontend_id_list>.*?)/$" % self._meta.resource_name, self.wrap_view('get_multiple'), name="api_get_multiple"),
+        ]
