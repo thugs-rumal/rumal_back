@@ -20,6 +20,16 @@ from main.resources import MongoDBResource
 from django.conf.urls import url
 
 """
+Custom Authorization
+"""
+
+
+class TaskAuthorization(Authorization):
+
+    def read_list(self, object_list, bundle):
+        return object_list.filter(user=bundle.request.user)
+
+"""
 Resources for SQLite models
 """
 class ProxyResource(ModelResource):
@@ -37,7 +47,7 @@ class TaskResource(ModelResource):
         queryset        = Task.objects.all()
         resource_name   = 'task'
         authentication  = ApiKeyAuthentication()
-        authorization   = Authorization()
+        authorization   = TaskAuthorization()
         allowed_methods = ['get', 'post']
         ordering        = [
             'id',
@@ -267,7 +277,7 @@ class StatusResource(ModelResource):
         queryset        = Task.objects.all()
         resource_name   = 'status'
         authentication  = ApiKeyAuthentication()
-        authorization   = Authorization()
+        authorization   = TaskAuthorization()
         allowed_methods = ['get', 'post']
         detail_uri_name = 'frontend_id'
         fields = ["status","object_id"]
