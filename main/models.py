@@ -11,6 +11,7 @@ import pytz
 from datetime import datetime
 from django.conf import settings
 from django.db import models
+from django.contrib.auth.models import User
 
 STATUS_NEW              = 0
 STATUS_PROCESSING       = 1
@@ -47,6 +48,7 @@ class Task(models.Model):
     # Relating task saved in Model to frontend task
     # Not unique because tasks if failed will be submitted multiple times.
     frontend_id     = models.IntegerField("Frontend ID")
+    user            = models.ForeignKey(User, null=True, blank=True, default=None)
     # Metadata
     submitted_on    = models.DateTimeField("Submitted on", null=False, blank=True, default=add_now)
     started_on      = models.DateTimeField("Started on", null=True, blank=True, default=None)
