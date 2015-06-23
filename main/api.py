@@ -43,6 +43,10 @@ class ProxyResource(ModelResource):
 class TaskResource(ModelResource):
     proxy           = fields.ForeignKey(ProxyResource, 'proxy', full=True, null=True)
 
+    def hydrate(self, bundle):
+        bundle.obj.user = bundle.request.user
+        return bundle
+
     class Meta:
         queryset        = Task.objects.all()
         resource_name   = 'task'
