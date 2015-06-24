@@ -80,12 +80,14 @@ class Command(BaseCommand):
         return document
 
     def remove_analysis_id(self,document):
+        "also removes id"
         document.pop("analysis_id")
         document.pop("_id")
         return document
 
     def id_to_old_id(self,document):
-        document["old_id"]= document.pop("_id")
+        "replaces sample_id with old_samples_id"
+        document["old_sample_id"]= document.pop("sample_id")
         return document
 
     def club_collections(self,analysis_id):
