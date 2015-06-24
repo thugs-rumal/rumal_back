@@ -122,12 +122,12 @@ class Command(BaseCommand):
         # preserving all grid_fs related
         # collections as it is
 
-        analysis["samples"] = [self.id_to_old_id(x) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["locations"] = [x for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["virustotal"] = [self.id_to_old_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["honeyagent"] = [self.id_to_old_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["androguard"] = [self.id_to_old_id(x) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["peepdf"] = [self.id_to_old_id(x) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["samples"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["locations"] = [self.remove_analysis_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["virustotal"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["honeyagent"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["androguard"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["peepdf"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
         
         return analysis
 
