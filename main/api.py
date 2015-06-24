@@ -18,6 +18,14 @@ from main.models import *
 from main.resources import MongoDBResource
 
 from django.conf.urls import url
+from django.http import HttpResponse,Http404
+
+import base64
+import hexdump
+import magic
+from gridfs import GridFS
+from pymongo import Connection
+from bson import ObjectId
 
 """
 Custom Authorization
