@@ -120,6 +120,7 @@ class Command(BaseCommand):
         # preserving all grid_fs related
         # collections as it is
 
+        analysis["samples"] = [self.id_to_old_id(x) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["locations"] = [self.id_to_old_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["virustotal"] = [self.id_to_old_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["honeyagent"] = [self.id_to_old_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
