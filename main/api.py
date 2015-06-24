@@ -219,6 +219,7 @@ class SampleResource(MongoDBResource):
     md5         = fields.CharField(attribute="md5", null=True)
     sha1        = fields.CharField(attribute="sha1", null=True)
     imphash     = fields.CharField(attribute="imphash", null=True)
+    sample_file = fields.FileField(attribute+"sample_file", null=True)
 
     class Meta:
         resource_name   = 'sample'
@@ -229,6 +230,38 @@ class SampleResource(MongoDBResource):
         filtering       = {
             'analysis_id': ['exact'],
         }
+
+    def prepend_urls(self):
+        return [
+           #url to download file.
+           url(r"^(?P<resource_name>%s)/(?P<pk>\w+)/file/$"% self._meta.resource_name,
+                self.wrap_view('get_file'), name="api_get_file"),
+        ]
+
+    def dehydrate_sample_file(self, bundle):
+        return '/api/v1/%s/%s/file/' % (self._meta.resource_name,bundle.obj.sample_id)
+
+    def get_file(self,request,**kwargs):
+        # Database Connection
+        dbfs    = Connection().thug 
+        fs      = GridFS(dbfs)
+
+        try:
+            download_file = base64.b64decode(fs.get(ObjectId(kwargs['pk'])).read())
+        except:
+            raise Http404("File not found")
+
+        hexdumped = False
+        mime = magic.from_buffer(download_file, mime=True)
+        if not is_text(mime):
+            download_file = hexdump.hexdump(download_file, result='return')
+            hexdumped = True
+
+        if not isinstance(download_file, unicode):
+            download_file = unicode(download_file, errors='ignore')
+
+
+        return HttpResponse(download_file, content_type=mime)
 
 class CertificateResource(MongoDBResource):
     id          = fields.CharField(attribute="_id")
