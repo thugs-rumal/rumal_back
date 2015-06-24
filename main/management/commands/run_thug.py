@@ -86,10 +86,8 @@ class Command(BaseCommand):
         return document
 
     def id_to_old_id(self,document):
-        "replaces sample_id with old_samples_id"
-        document["old_sample_id"]= document.pop("sample_id")
-        return document
-
+        "removed because this can be done in a more clean manner in frontend"
+        pass
     def club_collections(self,analysis_id):
         analysis = db.analyses.find_one({"_id":ObjectId(analysis_id)})
         analysis["exploits"] = [self.remove_analysis_id(self.urlid_to_url(x)) for x in db.exploits.find({"analysis_id":ObjectId(analysis_id)})]
@@ -122,12 +120,12 @@ class Command(BaseCommand):
         # preserving all grid_fs related
         # collections as it is
 
-        analysis["samples"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["samples"] = [self.remove_analysis_id(x) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["locations"] = [self.remove_analysis_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["virustotal"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["honeyagent"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["androguard"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["peepdf"] = [self.id_to_old_id(self.remove_analysis_id(x)) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["virustotal"] = [self.remove_analysis_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["honeyagent"] = [self.remove_analysis_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["androguard"] = [self.remove_analysis_id(x) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["peepdf"] = [self.remove_analysis_id(x) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
         
         return analysis
 
