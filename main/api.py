@@ -227,7 +227,7 @@ class SampleResource(MongoDBResource):
     md5         = fields.CharField(attribute="md5", null=True)
     sha1        = fields.CharField(attribute="sha1", null=True)
     imphash     = fields.CharField(attribute="imphash", null=True)
-    sample_file = fields.FileField(attribute+"sample_file", null=True)
+    sample_file = fields.FileField(attribute="sample_file", null=True)
 
     class Meta:
         resource_name   = 'sample'
