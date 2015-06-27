@@ -18,7 +18,15 @@ System-wide requirements:
 
 Python module requirments:
 * Django 1.7
-* Pymongo 2.6
+* pymongo 2.6
+* django-tastypie 0.12.1
+* hexdump 3.2
+* python-dateutil 2.4.2
+* python-magic 0.4.6
+* python-mimeparse 0.1.4
+* pytz 2015.4
+* six 1.9.0
+* wheel 0.24.0
 
 #### Docker
 You need to install Docker on your host to be able to run Rumal's backend. Please refer to Docker's own [installation guide](https://docs.docker.com/installation/).
