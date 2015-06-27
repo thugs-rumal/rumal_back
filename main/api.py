@@ -179,7 +179,7 @@ class LocationResource(MongoDBResource):
 
     def get_file(self,request,**kwargs):
         # Database Connection
-        dbfs    = Connection().thug 
+        dbfs    = Connection().thugfs
         fs      = GridFS(dbfs)
 
         try:
@@ -251,7 +251,7 @@ class SampleResource(MongoDBResource):
 
     def get_file(self,request,**kwargs):
         # Database Connection
-        dbfs    = Connection().thug 
+        dbfs    = Connection().thugfs
         fs      = GridFS(dbfs)
 
         try:
