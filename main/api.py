@@ -161,7 +161,7 @@ class LocationResource(MongoDBResource):
 
     class Meta:
         resource_name   = 'location'
-        # authentication  = ApiKeyAuthentication()
+        authentication  = ApiKeyAuthentication()
         object_class    = Document
         collection      = "locations"
         detail_uri_name = "_id"
@@ -232,7 +232,7 @@ class SampleResource(MongoDBResource):
 
     class Meta:
         resource_name   = 'sample'
-        # authentication  = ApiKeyAuthentication()
+        authentication  = ApiKeyAuthentication()
         object_class    = Document
         collection      = "samples"
         detail_uri_name = "_id"
