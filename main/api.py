@@ -16,6 +16,7 @@ from tastypie.authorization import Authorization
 
 from main.models import *
 from main.resources import MongoDBResource
+from main.utils import is_text
 
 from django.conf.urls import url
 from django.http import HttpResponse,Http404
@@ -160,7 +161,7 @@ class LocationResource(MongoDBResource):
 
     class Meta:
         resource_name   = 'location'
-        authentication  = ApiKeyAuthentication()
+        # authentication  = ApiKeyAuthentication()
         object_class    = Document
         collection      = "locations"
         detail_uri_name = "_id"
@@ -231,7 +232,7 @@ class SampleResource(MongoDBResource):
 
     class Meta:
         resource_name   = 'sample'
-        authentication  = ApiKeyAuthentication()
+        # authentication  = ApiKeyAuthentication()
         object_class    = Document
         collection      = "samples"
         detail_uri_name = "_id"
