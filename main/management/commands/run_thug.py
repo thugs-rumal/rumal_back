@@ -79,10 +79,15 @@ class Command(BaseCommand):
         document.pop("url_id")
         return document
 
-    def remove_analysis_id(self,document):
+    def remove_id_analysis_id(self,document):
         "also removes id"
         document.pop("analysis_id")
         document.pop("_id")
+        return document
+
+    def remove_analysis_id(self,document):
+        "removes only analysis id"
+        document.pop("analysis_id")
         return document
 
     def id_to_old_id(self,document):
@@ -90,11 +95,11 @@ class Command(BaseCommand):
         pass
     def club_collections(self,analysis_id):
         analysis = db.analyses.find_one({"_id":ObjectId(analysis_id)})
-        analysis["exploits"] = [self.remove_analysis_id(self.urlid_to_url(x)) for x in db.exploits.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["codes"] = [self.remove_analysis_id(x) for x in db.codes.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["behaviors"] = [self.remove_analysis_id(x) for x in db.behaviors.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["certificates"] = [self.remove_analysis_id(urlid_to_url(x)) for x in db.certificates.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["maec11"] = [self.remove_analysis_id(x) for x in db.maec11.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["exploits"] = [self.remove_id_analysis_id(self.urlid_to_url(x)) for x in db.exploits.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["codes"] = [self.remove_id_analysis_id(x) for x in db.codes.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["behaviors"] = [self.remove_id_analysis_id(x) for x in db.behaviors.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["certificates"] = [self.remove_id_analysis_id(urlid_to_url(x)) for x in db.certificates.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["maec11"] = [self.remove_id_analysis_id(x) for x in db.maec11.find({"analysis_id":ObjectId(analysis_id)})]
         first_url = db.urls.find_one({"_id":ObjectId(analysis["url_id"])})
         first_url["old_id"] = first_url.pop("_id")
         analysis["url_map"] = [first_url] #for further grid_fs maps id to url
@@ -102,7 +107,7 @@ class Command(BaseCommand):
         analysis.pop("_id")
         #now cleaning connections
         #using urls instead of url_ids
-        connections = [self.remove_analysis_id(x) for x in db.connections.find({"analysis_id":ObjectId(analysis_id)})]
+        connections = [self.remove_id_analysis_id(x) for x in db.connections.find({"analysis_id":ObjectId(analysis_id)})]
         for x in connections:
             # x.pop("analysis_id")
             # x.pop()
@@ -116,13 +121,14 @@ class Command(BaseCommand):
             x.pop("destination_id")
 
         analysis["connections"] = connections
-
+        # ids or not removed only in case of the sample
         analysis["samples"] = [self.remove_analysis_id(x) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["locations"] = [self.remove_analysis_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["virustotal"] = [self.remove_analysis_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["honeyagent"] = [self.remove_analysis_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["androguard"] = [self.remove_analysis_id(x) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["peepdf"] = [self.remove_analysis_id(x) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["locations"] = [self.remove_id_analysis_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
+
+        analysis["virustotal"] = [self.remove_id_analysis_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["honeyagent"] = [self.remove_id_analysis_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["androguard"] = [self.remove_id_analysis_id(x) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["peepdf"] = [self.remove_id_analysis_id(x) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
         
         return analysis
 
