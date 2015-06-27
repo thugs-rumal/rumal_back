@@ -117,9 +117,6 @@ class Command(BaseCommand):
 
         analysis["connections"] = connections
 
-        # preserving all grid_fs related
-        # collections as it is
-
         analysis["samples"] = [self.remove_analysis_id(x) for x in db.samples.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["locations"] = [self.remove_analysis_id(x) for x in db.locations.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["virustotal"] = [self.remove_analysis_id(x) for x in db.virustotal.find({"analysis_id":ObjectId(analysis_id)})]
