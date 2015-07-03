@@ -132,6 +132,39 @@ class Command(BaseCommand):
         
         return analysis
 
+    def make_flat_tree(self,analysis,analysis_id):
+        root_url_id = db.connections.find({"analysis_id": ObjectId(analysis_id)}).sort("chain_id")[0]['source_id']
+        root_url = db.urls.find_one({"_id":root_url_id})
+        # print root_url_id
+        # flat_tree_nodes holds the tree in the form of a list
+        # of nodes with each node having a node id(nid or index in list)
+        # and a parent parameter which refers to parent node 
+        flat_tree_nodes = [{"url_id":root_url_id,"parent":None,"url":root_url}] #root node as initial element
+     
+        # Traverses through flat_tree_nodes 
+        # initially consisting only of root
+        # For each node extra details are 
+        # added and its children with reference 
+        # to parent are added.
+        for nid,node in enumerate(flat_tree_nodes):
+            # new_node["nid"] = nid
+            # node = graph_populate_node(analysis_id, new_node)
+            node["url"] = db.urls.find_one({"_id": ObjectId(node["url_id"])})
+            node['nid'] = nid
+            flat_tree_nodes[nid] = node
+            # print node["url_id"]
+            # print get_immediate_children(analysis_id,new_node["url_id"])
+            for x in db.connections.find({"analysis_id": ObjectId(analysis_id),"source_id": ObjectId(node["url_id"])}):
+                # print x
+                temp = {
+                "url_id" : x["destination_id"],
+                "parent" : nid
+                }
+                flat_tree_nodes.append(temp)
+        analysis["flat_tree"] = flat_tree_nodes
+        return analysis
+
+
     def run_task(self, task):
         # Initialize args list for docker
         args = [
@@ -221,7 +254,9 @@ class Command(BaseCommand):
         r = re.search(r'\[MongoDB\] Analysis ID: ([a-z0-9]+)\b', stdout)
         if r:
             logger.info("[{}] Got ObjectID: {}".format(task.id, r.group(1)))
-            final_id = db.analysiscombo.insert(self.club_collections(r.group(1)))
+            analysis = self.club_collections(r.group(1))
+            analysis = self.make_flat_tree(analysis,r.group(1))
+            final_id = db.analysiscombo.insert(analysis)
             return final_id
         else:
             logger.error("[{}] Unable to get MongoDB analysis ID for the current task".format(task.id))
