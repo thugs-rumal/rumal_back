@@ -27,6 +27,7 @@ Python module requirments:
 * pytz 2015.4
 * six 1.9.0
 * wheel 0.24.0
+* tldextract 1.6
 
 #### Docker
 You need to install Docker on your host to be able to run Rumal's backend. Please refer to Docker's own [installation guide](https://docs.docker.com/installation/).
