@@ -25,6 +25,8 @@ import re
 import signal
 import subprocess
 import time
+import tldextract
+import socket
 
 from datetime import datetime
 from django.conf import settings
@@ -131,6 +133,11 @@ class Command(BaseCommand):
         analysis["peepdf"] = [self.remove_id_analysis_id(x) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
         
         return analysis
+
+    def resolve_ip(self, url):
+        """ Resolves IP from given URL """
+        ext = tldextract.extract(url)
+        return socket.gethostbyname(ext.subdomain + "." + ext.registered_domain)  # ToDo: possibly check for exceptions
 
     def make_flat_tree(self,analysis,analysis_id):
         root_url_id = db.connections.find({"analysis_id": ObjectId(analysis_id)}).sort("chain_id")[0]['source_id']
