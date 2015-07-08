@@ -153,10 +153,12 @@ class Command(BaseCommand):
         # For each node extra details are 
         # added and its children with reference 
         # to parent are added.
+        domain_ip_map = {}  # keys are domain names (including subd) and values contain respective whois data.
         for nid,node in enumerate(flat_tree_nodes):
             # new_node["nid"] = nid
             # node = graph_populate_node(analysis_id, new_node)
             node["url"] = db.urls.find_one({"_id": ObjectId(node["url_id"])})
+            node["ip"] = self.resolve_ip(node["url"])
             node['nid'] = nid
             flat_tree_nodes[nid] = node
             # print node["url_id"]
