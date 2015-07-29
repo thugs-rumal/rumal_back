@@ -36,6 +36,11 @@ from main.models import *
 import pymongo
 from bson import ObjectId
 
+STATUS_NEW              = 0
+STATUS_PROCESSING       = 1
+STATUS_FAILED           = 2
+STATUS_COMPLETED        = 3
+
 client = pymongo.MongoClient()
 db = client.thug
 
