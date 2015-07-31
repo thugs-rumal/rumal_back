@@ -136,27 +136,29 @@ class Command(BaseCommand):
         analysis["honeyagent"] = [self.remove_id_analysis_id(x) for x in db.honeyagent.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["androguard"] = [self.remove_id_analysis_id(x) for x in db.androguard.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["peepdf"] = [self.remove_id_analysis_id(x) for x in db.peepdf.find({"analysis_id":ObjectId(analysis_id)})]
-        
+
         return analysis
 
     def resolve_ip(self, url):
         """ Resolves IP from given URL """
         ext = tldextract.extract(url)
-        return socket.gethostbyname(ext.subdomain + "." + ext.registered_domain)  # ToDo: possibly check for exceptions
-
+        if ext.subdomain:
+            return socket.gethostbyname(ext.subdomain + "." + ext.registered_domain)  # ToDo: possibly check for exceptions
+        else:
+            return socket.gethostbyname(ext.registered_domain)
     def make_flat_tree(self,analysis,analysis_id):
         root_url_id = db.connections.find({"analysis_id": ObjectId(analysis_id)}).sort("chain_id")[0]['source_id']
         root_url = db.urls.find_one({"_id":root_url_id})
         # print root_url_id
         # flat_tree_nodes holds the tree in the form of a list
         # of nodes with each node having a node id(nid or index in list)
-        # and a parent parameter which refers to parent node 
+        # and a parent parameter which refers to parent node
         flat_tree_nodes = [{"url_id":root_url_id,"parent":None,"url":root_url}] #root node as initial element
-     
-        # Traverses through flat_tree_nodes 
+
+        # Traverses through flat_tree_nodes
         # initially consisting only of root
-        # For each node extra details are 
-        # added and its children with reference 
+        # For each node extra details are
+        # added and its children with reference
         # to parent are added.
         domain_ip_map = {}  # keys are domain names (including subd) and values contain respective whois data.
         for nid,node in enumerate(flat_tree_nodes):
