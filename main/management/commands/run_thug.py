@@ -146,6 +146,7 @@ class Command(BaseCommand):
             return socket.gethostbyname(ext.subdomain + "." + ext.registered_domain)  # ToDo: possibly check for exceptions
         else:
             return socket.gethostbyname(ext.registered_domain)
+
     def make_flat_tree(self,analysis,analysis_id):
         root_url_id = db.connections.find({"analysis_id": ObjectId(analysis_id)}).sort("chain_id")[0]['source_id']
         root_url = db.urls.find_one({"_id":root_url_id})
@@ -165,7 +166,10 @@ class Command(BaseCommand):
             # new_node["nid"] = nid
             # node = graph_populate_node(analysis_id, new_node)
             node["url"] = db.urls.find_one({"_id": ObjectId(node["url_id"])})
-            node["ip"] = self.resolve_ip(node["url"])
+            if node["url"] == 'about:blank':
+                node["ip"] = None
+            else:
+                node["ip"] = self.resolve_ip(node["url"])
             node['nid'] = nid
             flat_tree_nodes[nid] = node
             # print node["url_id"]
