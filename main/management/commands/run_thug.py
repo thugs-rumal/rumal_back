@@ -148,6 +148,7 @@ class Command(BaseCommand):
             return socket.gethostbyname(ext.registered_domain)
 
     def make_flat_tree(self,analysis,analysis_id):
+        logger.info("Now making flat tree.")
         root_url_id = db.connections.find({"analysis_id": ObjectId(analysis_id)}).sort("chain_id")[0]['source_id']
         root_url = db.urls.find_one({"_id":root_url_id})
         # print root_url_id
