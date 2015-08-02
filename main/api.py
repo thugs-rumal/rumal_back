@@ -328,7 +328,7 @@ class ComboResource(MongoDBResource):
     androguard      = fields.ListField(attribute="androguard")
     peepdf      = fields.ListField(attribute="peepdf")
     url_map      = fields.ListField(attribute="url_map")
-
+    flat_tree      = fields.ListField(attribute="flat_tree")
 
     class Meta:
         resource_name   = 'analysiscombo'
