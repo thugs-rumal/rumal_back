@@ -4,7 +4,7 @@
 #
 # API between backend and frontend.
 # Allows submission of tasks and checking
-# status. Also allows frontend to fetch 
+# status. Also allows frontend to fetch
 # analysis results. Closely follows api.py
 # of orignal Rumal Draft.
 
@@ -62,18 +62,6 @@ class TaskResource(ModelResource):
         authentication  = ApiKeyAuthentication()
         authorization   = TaskAuthorization()
         allowed_methods = ['get', 'post']
-        ordering        = [
-            'id',
-            'frontend_id',
-            'submitted_on',
-            'started_on',
-            'completed_on',
-            'status',
-            'url',
-            'referer',
-            'useragent',
-            'proxy',
-        ]
         filtering = {
             'frontend_id': ['exact'],
         }
@@ -334,6 +322,7 @@ class ComboResource(MongoDBResource):
     certificates      = fields.ListField(attribute="certificates")
     url_map      = fields.ListField(attribute="url_map")
     locations      = fields.ListField(attribute="locations")
+    samples      = fields.ListField(attribute="samples")
     virustotal      = fields.ListField(attribute="virustotal")
     honeyagent      = fields.ListField(attribute="honeyagent")
     androguard      = fields.ListField(attribute="androguard")
