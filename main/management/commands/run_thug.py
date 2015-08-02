@@ -105,7 +105,7 @@ class Command(BaseCommand):
         analysis["exploits"] = [self.remove_id_analysis_id(self.urlid_to_url(x)) for x in db.exploits.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["codes"] = [self.remove_id_analysis_id(x) for x in db.codes.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["behaviors"] = [self.remove_id_analysis_id(x) for x in db.behaviors.find({"analysis_id":ObjectId(analysis_id)})]
-        analysis["certificates"] = [self.remove_id_analysis_id(urlid_to_url(x)) for x in db.certificates.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["certificates"] = [self.remove_id_analysis_id(self.urlid_to_url(x)) for x in db.certificates.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["maec11"] = [self.remove_id_analysis_id(x) for x in db.maec11.find({"analysis_id":ObjectId(analysis_id)})]
         first_url = db.urls.find_one({"_id":ObjectId(analysis["url_id"])})
         first_url["old_id"] = first_url.pop("_id")
