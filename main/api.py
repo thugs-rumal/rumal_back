@@ -312,6 +312,7 @@ class GraphResource(MongoDBResource):
 
 class ComboResource(MongoDBResource):
     id          = fields.CharField(attribute="_id")
+    frontend_id = fields.CharField(attribute="frontend_id")
     thug        = fields.DictField(attribute="thug", null=True)
     timestamp   = fields.DateTimeField(attribute="timestamp")
     connections      = fields.ListField(attribute="connections")
