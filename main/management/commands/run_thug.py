@@ -29,6 +29,7 @@ import tldextract
 import socket
 
 from datetime import datetime
+from urlparse import urlparse
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from main.models import *
@@ -166,13 +167,50 @@ class Command(BaseCommand):
         for nid,node in enumerate(flat_tree_nodes):
             # new_node["nid"] = nid
             # node = graph_populate_node(analysis_id, new_node)
-            node["url"] = db.urls.find_one({"_id": ObjectId(node["url_id"])})["url"]
+            url = db.urls.find_one({"_id": ObjectId(node["url_id"])})
+            locations    = db.locations.find_one({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])}) or {}
+            samples    = [x for x in db.sampless.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
+            exploits    = [x for x in db.exploits.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
+            certificates = [x for x in db.certificates.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
+
+
+
+            for key, value in locations.iteritems():
+                if isinstance(value, ObjectId) and key != "content_id":
+                    del location[key]
+
+            for sample in samples:
+                for key, value in sample.iteritems():
+                    if isinstance(value, ObjectId) and key != "sample_id":
+                        del sample[key]
+
+            for exploit in exploits:
+                for key, value in exploit.iteritems():
+                    if isinstance(value, ObjectId):
+                        del exploit[key]
+
+            for certificate in certificates:
+                for key, value in certificate.iteritems():
+                    if isinstance(value, ObjectId):
+                        del certificate[key]
+
+
+
+            node["url"] = url["url"]
+            node["domain"] = url and urlparse(url['url']).hostname or '-',
             if node["url"] == 'about:blank':
                 node["ip"] = None
             else:
                 node["ip"] = self.resolve_ip(node["url"])
+            node["locations"] = locations
+            node["samples"] = samples
+            node["exploits"] = exploits
+            node["certificates"] = certificates
             node['nid'] = nid
+
+
             flat_tree_nodes[nid] = node
+
             # print node["url_id"]
             # print get_immediate_children(analysis_id,new_node["url_id"])
             for x in db.connections.find({"analysis_id": ObjectId(analysis_id),"source_id": ObjectId(node["url_id"])}):
@@ -277,6 +315,8 @@ class Command(BaseCommand):
             logger.info("[{}] Got ObjectID: {}".format(task.id, r.group(1)))
             analysis = self.club_collections(r.group(1))
             analysis = self.make_flat_tree(analysis,r.group(1))
+            analysis["frontend_id"] = str(task.frontend_id)
+            print analysis
             final_id = db.analysiscombo.insert(analysis)
             return final_id
         else:
