@@ -228,6 +228,7 @@ class Command(BaseCommand):
         # Initialize args list for docker
         args = [
             "/usr/bin/sudo", "/usr/bin/docker", "run",
+            "--rm",
             "-a", "stdin",
             "-a", "stdout",
             "-a", "stderr",
