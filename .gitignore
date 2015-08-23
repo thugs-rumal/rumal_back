@@ -14,6 +14,7 @@ ehthumbs.db
 Icon?
 Thumbs.db
 .*.swp
+.ropeproject
 
 # Ignore Django secret_key
 rumal_back/secret_key.py

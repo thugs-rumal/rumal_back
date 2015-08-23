@@ -20,6 +20,7 @@
 #           The Honeynet Project
 #
 import logging
+import netifaces
 import os
 import re
 import signal
@@ -233,9 +234,20 @@ class Command(BaseCommand):
             "-a", "stdout",
             "-a", "stderr",
             "-t",
-            "pdelsante/thug",
+            "pdelsante/thug-dockerfile",
             "/usr/bin/python", "/opt/thug/src/thug.py"
             ]
+
+        # Need to discover the host's docker0 IP address
+        # to be used to tell Thug where MongoDB resides
+        # FIXME: read this from a static config file before
+        # guessing.
+        try:
+            d0_address = netifaces.ifaddresses('docker0')[netifaces.AF_INET][0]['addr']
+            args.extend(['-D', '{}:27017'.format(d0_address)])
+        except:
+            logger.critical("Unable to get docker0 address, aborting")
+            raise
 
         # Base options
         if task.referer:
