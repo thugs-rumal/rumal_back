@@ -25,7 +25,7 @@ import base64
 import hexdump
 import magic
 from gridfs import GridFS
-from pymongo import Connection
+from pymongo import MongoClient
 from bson import ObjectId
 
 """
@@ -167,8 +167,8 @@ class LocationResource(MongoDBResource):
         return '/api/v1/%s/%s/file/' % (self._meta.resource_name,bundle.obj.content_id)
 
     def get_file(self,request,**kwargs):
-        # Database Connection
-        dbfs    = Connection().thugfs
+        # Database MongoClient
+        dbfs    = MongoClient().thugfs
         fs      = GridFS(dbfs)
 
         try:
@@ -239,8 +239,8 @@ class SampleResource(MongoDBResource):
         return '/api/v1/%s/%s/file/' % (self._meta.resource_name,bundle.obj.sample_id)
 
     def get_file(self,request,**kwargs):
-        # Database Connection
-        dbfs    = Connection().thugfs
+        # Database MongoClient
+        dbfs    = MongoClient().thugfs
         fs      = GridFS(dbfs)
 
         try:
