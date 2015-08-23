@@ -177,7 +177,7 @@ class Command(BaseCommand):
 
             for key, value in locations.iteritems():
                 if isinstance(value, ObjectId) and key != "content_id":
-                    del location[key]
+                    del locations[key]
 
             for sample in samples:
                 for key, value in sample.iteritems():
