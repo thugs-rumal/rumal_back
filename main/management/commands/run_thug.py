@@ -109,6 +109,7 @@ class Command(BaseCommand):
         analysis["behaviors"] = [self.remove_id_analysis_id(x) for x in db.behaviors.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["certificates"] = [self.remove_id_analysis_id(self.urlid_to_url(x)) for x in db.certificates.find({"analysis_id":ObjectId(analysis_id)})]
         analysis["maec11"] = [self.remove_id_analysis_id(x) for x in db.maec11.find({"analysis_id":ObjectId(analysis_id)})]
+        analysis["pcaps"] = [self.remove_id_analysis_id(x) for x in db.pcaps.find({"analysis_id":ObjectId(analysis_id)})]
         first_url = db.urls.find_one({"_id":ObjectId(analysis["url_id"])})
         first_url["old_id"] = first_url.pop("_id")
         analysis["url_map"] = [first_url] #for further grid_fs maps id to url

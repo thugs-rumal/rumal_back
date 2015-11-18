@@ -260,6 +260,46 @@ class SampleResource(MongoDBResource):
 
         return HttpResponse(download_file, content_type=mime)
 
+
+class PcapResource(MongoDBResource):
+    id          = fields.CharField(attribute="_id")
+    analysis_id = fields.CharField(attribute="analysis_id")
+    type        = fields.CharField(attribute="type", null=True)
+    sample_file = fields.FileField(attribute="pcap_file", null=True)
+
+    class Meta:
+        resource_name   = 'pcap'
+        authentication  = ApiKeyAuthentication()
+        object_class    = Document
+        collection      = "pcaps"
+        detail_uri_name = "_id"
+        filtering       = {
+            'analysis_id': ['exact'],
+        }
+
+    def prepend_urls(self):
+        return [
+           #url to download file.
+           url(r"^(?P<resource_name>%s)/(?P<pk>\w+)/file/$"% self._meta.resource_name,
+                self.wrap_view('get_file'), name="api_get_file"),
+        ]
+
+    def dehydrate_sample_file(self, bundle):
+        return '/api/v1/%s/%s/file/' % (self._meta.resource_name,bundle.obj.sample_id)
+
+    def get_file(self, request, **kwargs):
+        # Database MongoClient
+        dbfs    = MongoClient().thugfs
+        fs      = GridFS(dbfs)
+
+        try:
+            download_file = base64.b64decode(fs.get(ObjectId(kwargs['pk'])).read())
+        except:
+            raise Http404("File not found")
+
+        return HttpResponse(download_file, content_type=mime)
+
+
 class CertificateResource(MongoDBResource):
     id          = fields.CharField(attribute="_id")
     analysis_id = fields.CharField(attribute="analysis_id")
@@ -315,21 +355,22 @@ class ComboResource(MongoDBResource):
     frontend_id = fields.CharField(attribute="frontend_id")
     thug        = fields.DictField(attribute="thug", null=True)
     timestamp   = fields.DateTimeField(attribute="timestamp")
-    connections      = fields.ListField(attribute="connections")
-    exploits      = fields.ListField(attribute="exploits")
-    behaviors      = fields.ListField(attribute="behaviors")
-    codes      = fields.ListField(attribute="codes")
+    connections = fields.ListField(attribute="connections")
+    exploits    = fields.ListField(attribute="exploits")
+    behaviors   = fields.ListField(attribute="behaviors")
+    codes       = fields.ListField(attribute="codes")
     maec11      = fields.ListField(attribute="maec11")
-    certificates      = fields.ListField(attribute="certificates")
-    url_map      = fields.ListField(attribute="url_map")
-    locations      = fields.ListField(attribute="locations")
-    samples      = fields.ListField(attribute="samples")
-    virustotal      = fields.ListField(attribute="virustotal")
-    honeyagent      = fields.ListField(attribute="honeyagent")
-    androguard      = fields.ListField(attribute="androguard")
+    certificates = fields.ListField(attribute="certificates")
+    url_map     = fields.ListField(attribute="url_map")
+    locations   = fields.ListField(attribute="locations")
+    samples     = fields.ListField(attribute="samples")
+    virustotal  = fields.ListField(attribute="virustotal")
+    honeyagent  = fields.ListField(attribute="honeyagent")
+    androguard  = fields.ListField(attribute="androguard")
     peepdf      = fields.ListField(attribute="peepdf")
-    url_map      = fields.ListField(attribute="url_map")
-    flat_tree      = fields.ListField(attribute="flat_tree")
+    url_map     = fields.ListField(attribute="url_map")
+    flat_tree   = fields.ListField(attribute="flat_tree")
+    pcaps       = fields.ListField(attribute="pcaps")
 
     class Meta:
         resource_name   = 'analysiscombo'
