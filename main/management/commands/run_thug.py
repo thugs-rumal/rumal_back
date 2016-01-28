@@ -175,28 +175,36 @@ class Command(BaseCommand):
             exploits    = [x for x in db.exploits.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
             certificates = [x for x in db.certificates.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
 
-
-
+            to_delete = []
             for key, value in locations.iteritems():
                 if isinstance(value, ObjectId) and key != "content_id":
-                    del locations[key]
+                    to_delete.append(key)
+            for key in to_delete:
+                del locations[key]
 
             for sample in samples:
+                to_delete = []
                 for key, value in sample.iteritems():
                     if isinstance(value, ObjectId) and key != "sample_id":
-                        del sample[key]
+                        to_delete.append(key)
+                for key in to_delete:
+                    del sample[key]
 
+            to_delete = []
             for exploit in exploits:
                 for key, value in exploit.iteritems():
                     if isinstance(value, ObjectId):
-                        del exploit[key]
+                        to_delete.append(key)
+                for key in to_delete:
+                    del exploit[key]
 
+            to_delete = []
             for certificate in certificates:
                 for key, value in certificate.iteritems():
                     if isinstance(value, ObjectId):
-                        del certificate[key]
-
-
+                        to_delete.append(key)
+                for key in to_delete:
+                    del certificate[key]
 
             node["url"] = url["url"]
             node["domain"] = url and urlparse(url['url']).hostname or '-',
