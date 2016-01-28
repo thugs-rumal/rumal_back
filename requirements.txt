@@ -1,5 +1,5 @@
-Django==1.7
-django-tastypie==0.12.1
+Django==1.9.1
+django-tastypie==0.13.1
 hexdump==3.2
 netifaces==0.10.4
 pymongo==3.0.3
