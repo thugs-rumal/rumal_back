@@ -17,9 +17,9 @@ System-wide requirements:
 * MongoDB
 
 Python module requirments:
-* Django 1.7
+* Django 1.9.1
 * pymongo 2.6
-* django-tastypie 0.12.1
+* django-tastypie 0.13.1
 * hexdump 3.2
 * python-dateutil 2.4.2
 * python-magic 0.4.6
@@ -44,7 +44,7 @@ You can remove or comment it if you want MongoDB to be listening on all interfac
 Please replace `172.17.42.1` with whatever address your docker0 interface is set to (you can get it by running `ifconfig docker0`).
 
 #### Django
-**Please consider using VirtualEnv from now on, especially if you already have other projects running on Django versions other than 1.7**. Installing VirtualEnv is extremely easy:
+**Please consider using VirtualEnv from now on, especially if you already have other projects running on Django versions other than 1.9**. Installing VirtualEnv is extremely easy:
 
     $ sudo pip install virtualenv
 
@@ -57,7 +57,7 @@ Actually, you only need sudo if you're installing `virtualenv` globally (which I
 That's all. The first command will create a folder named `venv`, with a copy of the Python executable, pip and some other tools; the second command will activate the virtual environment for you. From now on, every time you run `pip install`, the requested modules will be installed locally, without touching your global Python environment.
 When you're done with Rumāl, just run `deactivate` to exit from `venv`. Please also consider using [Autoenv](https://github.com/kennethreitz/autoenv) to automatically activate your virtual environment every time you enter the folder (and to automatically deactivate it when you leave).
 
-Now, you can install Rumāl's own dependencies by running the following command from the root directory. **WARNING: Rumāl's backend requires specific versions of some libraries such as Django 1.7. If you've got other projects running on the same box, please consider using VirtualEnv (see above) if you didn't already!**
+Now, you can install Rumāl's own dependencies by running the following command from the root directory. **WARNING: Rumāl's backend requires specific versions of some libraries such as Django 1.9. If you've got other projects running on the same box, please consider using VirtualEnv (see above) if you didn't already!**
 
     $ pip install -r requirements.txt
 
