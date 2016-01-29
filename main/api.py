@@ -297,7 +297,7 @@ class PcapResource(MongoDBResource):
         except:
             raise Http404("File not found")
 
-        return HttpResponse(download_file, content_type=mime)
+        return HttpResponse(download_file, content_type='application/vnd.tcpdump.pcap')
 
 
 class CertificateResource(MongoDBResource):
