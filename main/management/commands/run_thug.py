@@ -190,16 +190,16 @@ class Command(BaseCommand):
                 for key in to_delete:
                     del sample[key]
 
-            to_delete = []
             for exploit in exploits:
+                to_delete = []
                 for key, value in exploit.iteritems():
                     if isinstance(value, ObjectId):
                         to_delete.append(key)
                 for key in to_delete:
                     del exploit[key]
 
-            to_delete = []
             for certificate in certificates:
+                to_delete = []
                 for key, value in certificate.iteritems():
                     if isinstance(value, ObjectId):
                         to_delete.append(key)
