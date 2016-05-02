@@ -34,6 +34,7 @@ from urlparse import urlparse
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from main.models import *
+from main.utils import clone_without_object_ids
 
 import pymongo
 from bson import ObjectId
@@ -170,41 +171,10 @@ class Command(BaseCommand):
             # new_node["nid"] = nid
             # node = graph_populate_node(analysis_id, new_node)
             url = db.urls.find_one({"_id": ObjectId(node["url_id"])})
-            locations    = db.locations.find_one({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])}) or {}
-            samples    = [x for x in db.sampless.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
-            exploits    = [x for x in db.exploits.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
-            certificates = [x for x in db.certificates.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
-
-            to_delete = []
-            for key, value in locations.iteritems():
-                if isinstance(value, ObjectId) and key != "content_id":
-                    to_delete.append(key)
-            for key in to_delete:
-                del locations[key]
-
-            for sample in samples:
-                to_delete = []
-                for key, value in sample.iteritems():
-                    if isinstance(value, ObjectId) and key != "sample_id":
-                        to_delete.append(key)
-                for key in to_delete:
-                    del sample[key]
-
-            for exploit in exploits:
-                to_delete = []
-                for key, value in exploit.iteritems():
-                    if isinstance(value, ObjectId):
-                        to_delete.append(key)
-                for key in to_delete:
-                    del exploit[key]
-
-            for certificate in certificates:
-                to_delete = []
-                for key, value in certificate.iteritems():
-                    if isinstance(value, ObjectId):
-                        to_delete.append(key)
-                for key in to_delete:
-                    del certificate[key]
+            locations    = clone_without_object_ids(db.locations.find_one({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])}) or {})
+            samples    = [clone_without_object_ids(x, 'sample_id') for x in db.sampless.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
+            exploits    = [clone_without_object_ids(x) for x in db.exploits.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
+            certificates = [clone_without_object_ids(x) for x in db.certificates.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
 
             node["url"] = url["url"]
             node["domain"] = url and urlparse(url['url']).hostname or '-',

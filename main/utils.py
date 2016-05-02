@@ -18,6 +18,7 @@
 #
 # Author:   Tarun Kumar <reach.tarun.here@gmail.com>
 #
+from bson import ObjectId
 
 def is_text(mime):
     if mime.startswith('text/'):
@@ -27,3 +28,14 @@ def is_text(mime):
         return True
 
     return False
+
+
+def clone_without_object_ids(aDict, key_exclude_filter=None):
+    if isinstance(aDict, dict):
+        # if key_exclude_filter is defined use it to filter
+        if key_exclude_filter:
+            return {key :value for key, value in aDict.iteritems() if not isinstance(value, ObjectId) and key != key_exclude_filter}
+        # otherwise just remove ObjectId keys
+        return {key :value for key, value in aDict.iteritems() if not isinstance(value, ObjectId)}
+    # if argument is not a dict just return it as it was
+    return aDict
