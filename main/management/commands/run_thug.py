@@ -295,7 +295,7 @@ class Command(BaseCommand):
         logger.debug("[{}] Will run command: {}".format(task.id, " ".join(args)))
         p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(5*60) # 5 minutes
+        signal.alarm(10*60) # 10 minutes
         try:
             stdout, stderr = p.communicate()
             signal.alarm(0)  # reset the alarm
