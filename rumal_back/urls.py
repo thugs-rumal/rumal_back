@@ -24,5 +24,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
 
     # APIs
-    url(r'^api/', include(v1_api.urls)),
+    # url(r'^api/', include(v1_api.urls)),
 ]
