@@ -10,10 +10,18 @@ from django.core import serializers
 from django.utils.encoding import smart_str
 
 import pymongo
+import gridfs
 import time
 
 from main.models import *
 from main.utils import *
+
+from bson import json_util
+import base64
+import magic
+import hexdump
+
+
 
 RPC_HOST = '0.0.0.0'
 RPC_PORT = 5672
@@ -30,6 +38,8 @@ logger = logging.getLogger(__name__)
 
 client = pymongo.MongoClient()
 db = client.thug
+dbfs = client.thugfs
+fs = gridfs.GridFS(dbfs)
 
 
 class Command(BaseCommand):
@@ -79,14 +89,53 @@ class Command(BaseCommand):
         task_status = task.status
         if task_status == STATUS_COMPLETED:  # Successful scan
             result = db.analysiscombo.find({'frontend_id': frontend_id})
+            files =  self.generate_files(result[0])
+
             self.reply(ch, method, props, {"status": STATUS_COMPLETED,
-                                           "data": result[0]
+                                           "data": result[0],
+                                           "files": json_util.dumps(files)
                                            })
+            # self.reply(ch, method, props, {"files": files
+            #                                })
+
         if task_status == STATUS_FAILED:  # Failed scan
             self.reply(ch, method, props, {"status": STATUS_FAILED,
                                            "data": frontend_id
                                            })
         logger.debug("Response sent for task {}".format(frontend_id))
+
+    def generate_files(self, analysis):
+        data = []
+        for x in analysis["locations"]:
+            if x['content_id'] != None:
+                data.append({"content_id": x['content_id'], "data": self.get_file(x['content_id'])})
+        for x in analysis["samples"]:
+            data.append({"sample_id": x['sample_id'], "data": self.get_file(x['sample_id'])})
+        for x in analysis["pcaps"]:
+            if x['content_id'] is not None:
+                data.append({"content_id": x["content_id"], "data": self.get_file(x['content_id'])})
+        return data
+
+    def get_file(self, file_id):
+        #try:
+        download_file = base64.b64decode(fs.get(file_id).read())
+        #except:
+            #raise Http404("File not found")
+
+        hexdumped = False
+        mime = magic.from_buffer(download_file, mime=True)
+        if not is_text(mime):
+            download_file = hexdump.hexdump(download_file, result='return')
+            hexdumped = True
+
+        # Ensure to use Unicode for the content, else JsonResopnse may fail
+        if not isinstance(download_file, unicode):
+            download_file = unicode(download_file, errors='ignore')
+
+        return download_file
+
+
+
 
     def reply(self, ch, method, props, body):
         """
@@ -122,7 +171,7 @@ class Command(BaseCommand):
 
             channel.basic_qos(prefetch_count=1)
             channel.basic_consume(self.on_request, queue=RPC_QUEUE)
-            logger.debug(" [x] Awaiting RPC requests")
+            logger.debug(" [x] Awaiting RPC requests on {}:{}".format(RPC_HOST, RPC_PORT))
             channel.start_consuming()
         except pika.exceptions.ConnectionClosed:
             logger.debug("Cannot connect to RabbitMQ")
