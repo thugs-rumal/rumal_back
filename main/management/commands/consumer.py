@@ -4,7 +4,6 @@ import logging
 import thread
 import json
 from bson.objectid import ObjectId
-import yaml
 
 from django.core import serializers
 from django.utils.encoding import smart_str
@@ -53,7 +52,7 @@ class Command(BaseCommand):
         :param body: message in queue
         :return:
         """
-        body = yaml.safe_load(body)
+        body = json.loads(body)
         if int(body["task"]) == NEW_SCAN_TASK:  # new scan message
             body.pop("task")
             self.new_task(ch, method, props, body)
@@ -95,8 +94,6 @@ class Command(BaseCommand):
                                            "data": result[0],
                                            "files": json_util.dumps(files)
                                            })
-            # self.reply(ch, method, props, {"files": files
-            #                                })
 
         if task_status == STATUS_FAILED:  # Failed scan
             self.reply(ch, method, props, {"status": STATUS_FAILED,
