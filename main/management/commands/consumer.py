@@ -108,12 +108,18 @@ class Command(BaseCommand):
         data = []
         for x in analysis["locations"]:
             if x['content_id'] != None:
-                data.append({"content_id": x['content_id'], "data": self.get_file(x['content_id'])})
+                data.append({"content_id": x['content_id'],
+                             "data": self.get_file(x['content_id'])
+                             })
         for x in analysis["samples"]:
-            data.append({"sample_id": x['sample_id'], "data": self.get_file(x['sample_id'])})
+            data.append({"sample_id": x['sample_id'],
+                         "data": self.get_file(x['sample_id'])
+                         })
         for x in analysis["pcaps"]:
             if x['content_id'] is not None:
-                data.append({"content_id": x["content_id"], "data": self.get_file(x['content_id'])})
+                data.append({"content_id": x["content_id"],
+                             "data": self.get_file(x['content_id'])
+                             })
         return data
 
     def get_file(self, file_id):
