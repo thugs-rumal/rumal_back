@@ -21,6 +21,9 @@
 from bson import ObjectId
 import json
 
+class DownloadError(Exception):
+    pass
+
 def is_text(mime):
     if mime.startswith('text/'):
         return True
