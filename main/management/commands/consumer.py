@@ -81,8 +81,8 @@ class Command(BaseCommand):
                       }]
         task_dict = json.dumps(task_dict)
         task_dict = smart_str(task_dict)
-        for obj in serializers.deserialize('json', task_dict):
-            obj.save()
+        obj = serializers.deserialize('json', task_dict).next()
+        obj.save()
         logger.debug("Task saved {}".format(frontend_id))
         logger.info("Waiting for task to finish {}".format(frontend_id))
 
