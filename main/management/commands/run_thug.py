@@ -309,7 +309,6 @@ class Command(BaseCommand):
             analysis = self.club_collections(r.group(1))
             analysis = self.make_flat_tree(analysis,r.group(1))
             analysis["frontend_id"] = str(task.frontend_id)
-            print analysis
             final_id = db.analysiscombo.insert(analysis)
             return final_id
         else:

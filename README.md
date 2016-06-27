@@ -9,12 +9,13 @@ The API has two end pointsi: one for submitting Tasks and the other fo retrievin
 
 ### Install
 
-Like in Rumāl's orignal draft, the backend needs to make sure you are using a supported Thug version, to avoid any incompatibilities in arguments and behaviours. To do so, Thug will be run inside a Docker container.
+Like in Rumāl's orignal draft, the backend needs to make sure you are using a supported Thug version, to avoid any incompatibilities in arguments and behaviours. To do so, Thug will be run inside a Docker container. To replace the REST api, rabbitMQ queue communication is used.
 
 System-wide requirements:
 * Python 2.7+
 * Docker
 * MongoDB
+* RabbitMQ
 
 You can find a list of required python modules in the included `requirements.txt`. Please refer to the details below.
 
@@ -33,6 +34,9 @@ You can remove or comment it if you want MongoDB to be listening on all interfac
     bind_ip = 127.0.0.1,172.17.42.1
 
 Please replace `172.17.42.1` with whatever address your docker0 interface is set to (you can get it by running `ifconfig docker0`).
+
+#### RabbitMQ
+RabbitMQ listens on port 5672 and a named queue for incoming connections. Please follow the official [installation guide](https://www.rabbitmq.com/download.html).
 
 #### Django
 **Please consider using VirtualEnv from now on, especially if you already have other projects running on Django versions other than 1.9**. Installing VirtualEnv is extremely easy:
@@ -57,11 +61,32 @@ Now you can setup the database (which, for now, uses SQLite as the backend) and 
     $ python manage.py migrate
     $ python manage.py createsuperuser
 
+
+### Basic configuration
+
+Before running Rumāl's back-end, you will need to let it know where to find the ANY queue. If this is your only instance of the backend you can put localhost. If you have another instance of the backend running which has this queue you should put its IP address. Tasks posted on the any queue will be piked up by the first available backend
+
+Once the back-end is ready, you will need to configure the front-end by creating a new configuration file by running (from the front-end's root):
+
+    $ cp conf/backend.conf.example conf/backend.conf
+
+This file will contain the following values:
+
+    [backend]
+    host = "localhost"
+    is_master = "true/false"
+
+Please change them according on how you configured the back-end.
+
 ## Running Rumal's backend
 
 First of all, you will need to run the backend daemon. **IMPORTANT: please make sure that the user you run the backend daemon with can run Docker images** (e.g. run it as `root` or add it to the `docker` group or create a `sudoers` entry to allow it to run `/usr/bin/docker without password`, whatever).
 
     $ python manage.py run_thug
+
+Run the RabbitMQ consumer to handle incomming connection
+
+    $ python manage.py consumer
 
 Then, in another console, you can run the web APIs:
 
