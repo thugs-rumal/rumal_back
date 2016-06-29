@@ -151,25 +151,26 @@ class Command(BaseCommand):
         else:
             return socket.gethostbyname(ext.registered_domain)
 
-    def make_flat_tree(self,analysis,analysis_id):
+    def make_flat_tree(self, analysis, analysis_id):
         logger.info("Now making flat tree.")
         root_url_id = db.connections.find({"analysis_id": ObjectId(analysis_id)}).sort("chain_id")[0]['source_id']
-        root_url = db.urls.find_one({"_id":root_url_id})
-        # print root_url_id
+        root_url = db.urls.find_one({"_id": root_url_id})
         # flat_tree_nodes holds the tree in the form of a list
         # of nodes with each node having a node id(nid or index in list)
         # and a parent parameter which refers to parent node
-        flat_tree_nodes = [{"url_id":root_url_id,"parent":None,"url":root_url}] #root node as initial element
+        # url_id is unique
+        flat_tree_nodes = [{"url_id": root_url_id,
+                            "parent": None,
+                            "url": root_url
+                            }]  # root node as initial element
 
         # Traverses through flat_tree_nodes
         # initially consisting only of root
         # For each node extra details are
         # added and its children with reference
         # to parent are added.
-        domain_ip_map = {}  # keys are domain names (including subd) and values contain respective whois data.
-        for nid,node in enumerate(flat_tree_nodes):
-            # new_node["nid"] = nid
-            # node = graph_populate_node(analysis_id, new_node)
+        # Checks for cycles before adding
+        for nid, node in enumerate(flat_tree_nodes):
             url = db.urls.find_one({"_id": ObjectId(node["url_id"])})
             locations    = clone_without_object_ids(db.locations.find_one({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])}) or {})
             samples    = [clone_without_object_ids(x, 'sample_id') for x in db.sampless.find({"analysis_id": ObjectId(analysis_id), "url_id": ObjectId(node["url_id"])})]
@@ -187,16 +188,16 @@ class Command(BaseCommand):
             node["exploits"] = exploits
             node["certificates"] = certificates
             node['nid'] = nid
-
-
             flat_tree_nodes[nid] = node
 
-            # print node["url_id"]
-            # print get_immediate_children(analysis_id,new_node["url_id"])
             for x in db.connections.find({"analysis_id": ObjectId(analysis_id),"source_id": ObjectId(node["url_id"])}):
-                # print x
+                destination_id = x["destination_id"]
+                #  checks for cycles
+                if len([True for i, _ in enumerate(flat_tree_nodes) if _['url_id'] == destination_id]) > 0:
+                    continue # Do not add node to tree
+                #  No cycle found add to tree
                 temp = {
-                "url_id" : x["destination_id"],
+                "url_id" : destination_id,
                 "parent" : nid
                 }
                 flat_tree_nodes.append(temp)
