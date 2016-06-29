@@ -36,10 +36,10 @@ IS_BACKEND_MASTER = bool(config.get('backend', 'is_master', 'True'))  # master b
 NEW_SCAN_TASK = 1
 
 #  task status
-STATUS_NEW        = 0
+STATUS_NEW = 0
 STATUS_PROCESSING = 1
-STATUS_FAILED     = 2
-STATUS_COMPLETED  = 3
+STATUS_FAILED = 2
+STATUS_COMPLETED = 3
 
 logger = logging.getLogger(__name__)
 
@@ -198,13 +198,14 @@ class Command(BaseCommand):
         :param options:
         :return:
         """
-        any_queue = threading.Thread(target=self.create_connection, kwargs={'host': BACKEND_HOST,
-                                                                            'port': RPC_PORT,
-                                                                            'queue_name': ANY_QUEUE})
+        any_queue = threading.Thread(target=self.create_connection,
+                                     kwargs={'host': BACKEND_HOST,
+                                             'port': RPC_PORT,
+                                             'queue_name': ANY_QUEUE})
         any_queue.start()
-        private_queue = threading.Thread(target=self.create_connection, kwargs={'host': PRIVATE_HOST,
-                                                                                'port': RPC_PORT,
-                                                                                'queue_name': PRIVATE_QUEUE})
+        private_queue = threading.Thread(target=self.create_connection,
+                                         kwargs={'host': PRIVATE_HOST,
+                                                 'port': RPC_PORT,
+                                                 'queue_name': PRIVATE_QUEUE})
 
         private_queue.start()
-

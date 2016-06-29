@@ -36,6 +36,7 @@ QUERY_TERMS = ['exact', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'regex', 'i
 
 db = MongoClient().thug
 
+
 class MongoDBResource(Resource):
     """
     A base resource that allows to make CRUD operations for mongodb.
@@ -66,15 +67,15 @@ class MongoDBResource(Resource):
         return kwargs
 
     def get_object_list(self, request):
-       bundle = self.build_bundle(request=request)
-       return self.obj_get_list(bundle)
+        bundle = self.build_bundle(request=request)
+        return self.obj_get_list(bundle)
 
     def obj_get_list(self, bundle, **kwargs):
         """
         Maps mongodb documents to resource's object class.
         """
-        filters     = {}
-        obj_list    = []
+        filters = {}
+        obj_list = []
 
         # Get filters from query string
         if hasattr(bundle.request, 'GET'):
@@ -108,7 +109,6 @@ class MongoDBResource(Resource):
 
         return self._get_object_class()(obj)
 
-
     def apply_filters(self, request, applicable_filters):
         return list(map(self._get_object_class(), self._get_collection().find(applicable_filters)))
 
@@ -141,7 +141,7 @@ class MongoDBResource(Resource):
                 }
             elif filter_type.endswith('regex'):
                 applicable_filters[field_name] = {
-                    '$regex':   value
+                    '$regex': value
                 }
                 if filter_type.startswith('i'):
                     applicable_filters[field_name]['$options'] = 'i'
