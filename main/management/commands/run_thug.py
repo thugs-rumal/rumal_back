@@ -328,8 +328,9 @@ class Command(BaseCommand):
             "-a", "stderr",
             "-it",
             "pdelsante/thug-dockerfile",
-            "/usr/bin/python", "/opt/thug/src/thug.py"
-            ]
+            "/usr/bin/python",
+            "/opt/thug/src/thug.py",
+        ]
 
         # Need to discover the host's docker0 IP address
         # to be used to tell Thug where MongoDB resides
@@ -418,7 +419,7 @@ class Command(BaseCommand):
 
         # Set up a timeout of 10 minutes
         signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(10*60)
+        signal.alarm(10 * 60)
 
         try:
             stdout, stderr = p.communicate()
