@@ -9,8 +9,8 @@ import pymongo
 import gridfs
 import time
 
-from main.models import *
-from main.utils import *
+from main.models import settings, Task
+from main.utils import DownloadError, Encoder, is_text
 
 from bson import json_util
 import json
@@ -76,6 +76,7 @@ class Command(BaseCommand):
         """
         frontend_id = str(body['frontend_id'])
         logger.debug("Task received {}".format(frontend_id))
+
         task_dict = [{"model": "main.task",
                       "fields": body
                       }]
@@ -83,6 +84,7 @@ class Command(BaseCommand):
         task_dict = smart_str(task_dict)
         obj = serializers.deserialize('json', task_dict).next()
         obj.save()
+
         logger.debug("Task saved {}".format(frontend_id))
         logger.info("Waiting for task to finish {}".format(frontend_id))
 
@@ -93,8 +95,10 @@ class Command(BaseCommand):
 
         # Task completed or failed
         logger.debug("Task Completed {}".format(frontend_id))
+
         task = Task.objects.get(frontend_id=frontend_id)
         task_status = task.status
+
         if task_status == STATUS_COMPLETED:  # Successful scan
             result = db.analysiscombo.find({'frontend_id': frontend_id})
             files = self.generate_files(result[0])
@@ -108,6 +112,7 @@ class Command(BaseCommand):
             self.reply(ch, method, props, {"status": STATUS_FAILED,
                                            "data": frontend_id
                                            })
+
         logger.debug("Response sent for task {}".format(frontend_id))
 
     def generate_files(self, analysis):
@@ -117,15 +122,18 @@ class Command(BaseCommand):
                 data.append({"content_id": x['content_id'],
                              "data": self.get_file(x['content_id'])
                              })
+
         for x in analysis["samples"]:
             data.append({"sample_id": x['sample_id'],
                          "data": self.get_file(x['sample_id'])
                          })
+
         for x in analysis["pcaps"]:
             if x['content_id'] is not None:
                 data.append({"content_id": x["content_id"],
                              "data": self.get_file(x['content_id'])
                              })
+
         return data
 
     def get_file(self, file_id):
@@ -173,7 +181,9 @@ class Command(BaseCommand):
         :return:
         """
         try:
-            parameters = pika.ConnectionParameters(host=host, port=port)
+            parameters = pika.ConnectionParameters(host=host,
+                                                   port=port
+                                                   )
             connection = pika.BlockingConnection(parameters)
             channel = connection.channel()
             if IS_BACKEND_MASTER or queue_name != ANY_QUEUE:
@@ -182,30 +192,63 @@ class Command(BaseCommand):
 
             channel.basic_qos(prefetch_count=1)
             channel.basic_consume(self.on_request, queue=queue_name)
+
             logger.debug(" [x] Awaiting RPC requests in {} on {}:{}".format(queue_name, host, port))
             channel.start_consuming()
+
         except DownloadError:
             logger.debug("Something went wrong when downloading files")
+
         except pika.exceptions.ConnectionClosed:
             logger.debug("Cannot connect to RabbitMQ")
+
         except KeyboardInterrupt:
             connection.close()
 
     def handle(self, *args, **options):
         """
-        Starts 2 threads for any_queue(remote or local) and the private_queue
-        :param args:
-        :param options:
-        :return:
-        """
-        any_queue = threading.Thread(target=self.create_connection,
-                                     kwargs={'host': BACKEND_HOST,
-                                             'port': RPC_PORT,
-                                             'queue_name': ANY_QUEUE})
-        any_queue.start()
-        private_queue = threading.Thread(target=self.create_connection,
-                                         kwargs={'host': PRIVATE_HOST,
-                                                 'port': RPC_PORT,
-                                                 'queue_name': PRIVATE_QUEUE})
+            Starts 2 threads for any_queue(remote or local) and the private_queue
+            They should be restarted in the case of exceptions
+            :param args:
+            :param options:
+            :return:
+            """
+        any_queue = None
+        private_queue = None
 
-        private_queue.start()
+        # Starting both queues, restarts them if they die
+        while True:
+
+            if any_queue is None or not any_queue.isAlive():
+
+                if any_queue is None:
+                    logger.debug("Any queue is starting")
+                else:
+                    logger.debug("Any queue is restarting")
+
+                any_queue = threading.Thread(
+                    target=self.create_connection,
+                    kwargs={'host': BACKEND_HOST,
+                            'port': RPC_PORT,
+                            'queue_name': ANY_QUEUE
+                            }
+                )
+
+                any_queue.start()
+
+            if private_queue is None or not private_queue.isAlive():
+
+                if private_queue is None:
+                    logger.debug("Private queue is starting")
+                else:
+                    logger.debug("Private queue is restarting")
+
+                private_queue = threading.Thread(
+                    target=self.create_connection,
+                    kwargs={'host': PRIVATE_HOST,
+                            'port': RPC_PORT,
+                            'queue_name': PRIVATE_QUEUE})
+
+                private_queue.start()
+
+            time.sleep(10)
