@@ -77,6 +77,9 @@ class Command(BaseCommand):
         frontend_id = str(body['frontend_id'])
         logger.debug("Task received {}".format(frontend_id))
 
+        #  Tasks are unique. If they want to be rerun frontend needs to send them again.
+        [x.delete() for x in Task.objects.filter(frontend_id=frontend_id)]
+
         task_dict = [{"model": "main.task",
                       "fields": body
                       }]
