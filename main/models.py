@@ -12,11 +12,9 @@ from datetime import datetime
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
+from main.utils import STATUS_NEW, STATUS_COMPLETED, STATUS_FAILED, STATUS_PROCESSING
 
-STATUS_NEW = 0
-STATUS_PROCESSING = 1
-STATUS_FAILED = 2
-STATUS_COMPLETED = 3
+
 STATUS_CHOICES = (
     (STATUS_NEW, 'New'),
     (STATUS_PROCESSING, 'Processing'),

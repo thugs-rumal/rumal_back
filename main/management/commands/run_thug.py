@@ -34,15 +34,11 @@ from urlparse import urlparse
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from main.models import Task
-from main.utils import clone_without_object_ids
+from main.utils import clone_without_object_ids, STATUS_PROCESSING, STATUS_FAILED, STATUS_NEW, STATUS_COMPLETED
 
 import pymongo
 from bson import ObjectId
 
-STATUS_NEW = 0
-STATUS_PROCESSING = 1
-STATUS_FAILED = 2
-STATUS_COMPLETED = 3
 
 client = pymongo.MongoClient()
 db = client.thug
