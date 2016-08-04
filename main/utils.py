@@ -22,6 +22,22 @@ from bson import ObjectId
 import json
 
 
+#  task status
+STATUS_NEW = 0
+STATUS_PROCESSING = 1
+STATUS_FAILED = 2
+STATUS_COMPLETED = 3
+
+#  tasks
+NEW_SCAN_TASK = 1
+
+# Rabbit settings
+RPC_PORT = 5672
+ANY_QUEUE = 'any_queue'
+PRIVATE_QUEUE = 'private_queue'
+PRIVATE_HOST = '0.0.0.0'
+
+
 class DownloadError(Exception):
     pass
 

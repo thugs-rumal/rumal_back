@@ -10,7 +10,8 @@ import gridfs
 import time
 
 from main.models import settings, Task
-from main.utils import DownloadError, Encoder, is_text
+from main.utils import DownloadError, Encoder, is_text, STATUS_COMPLETED, STATUS_NEW, STATUS_PROCESSING, STATUS_FAILED,\
+    NEW_SCAN_TASK, RPC_PORT, PRIVATE_QUEUE, PRIVATE_HOST, ANY_QUEUE
 
 from bson import json_util
 import json
@@ -22,24 +23,12 @@ import ConfigParser
 import os
 import threading
 
-RPC_PORT = 5672
-ANY_QUEUE = 'any_queue'
-PRIVATE_QUEUE = 'private_queue'
-PRIVATE_HOST = '0.0.0.0'
 
 config = ConfigParser.ConfigParser()
 config.read(os.path.join(settings.BASE_DIR, "conf", "backend.conf"))
 BACKEND_HOST = config.get('backend', 'host', 'localhost')  # host of master backend where any queue is located
 IS_BACKEND_MASTER = bool(config.get('backend', 'is_master', 'True'))  # master backend should define the any queue
 
-#  tasks
-NEW_SCAN_TASK = 1
-
-#  task status
-STATUS_NEW = 0
-STATUS_PROCESSING = 1
-STATUS_FAILED = 2
-STATUS_COMPLETED = 3
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +65,9 @@ class Command(BaseCommand):
         """
         frontend_id = str(body['frontend_id'])
         logger.debug("Task received {}".format(frontend_id))
+
+        #  Tasks are unique. If they want to be rerun frontend needs to send them again.
+        [x.delete() for x in Task.objects.filter(frontend_id=frontend_id)]
 
         task_dict = [{"model": "main.task",
                       "fields": body
