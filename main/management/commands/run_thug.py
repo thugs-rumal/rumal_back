@@ -35,6 +35,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from main.models import Task
 from main.utils import clone_without_object_ids, STATUS_PROCESSING, STATUS_FAILED, STATUS_NEW, STATUS_COMPLETED
+from socket import gaierror
 
 import pymongo
 from bson import ObjectId
@@ -214,14 +215,18 @@ class Command(BaseCommand):
 
     def resolve_ip(self, url):
         """ Resolves IP from given URL """
-        ext = tldextract.extract(url)
-        if ext.subdomain:
-            # ToDo: possibly check for exceptions
-            return socket.gethostbyname(
-                ext.subdomain + "." + ext.registered_domain
-            )
-        else:
-            return socket.gethostbyname(ext.registered_domain)
+        try:
+            ext = tldextract.extract(url)
+            if ext.subdomain:
+                # ToDo: possibly check for exceptions
+                return socket.gethostbyname(
+                    ext.subdomain + "." + ext.registered_domain
+                )
+            else:
+                return socket.gethostbyname(ext.registered_domain)
+        except gaierror:
+            return False
+
 
     def make_flat_tree(self, analysis, analysis_id):
         logger.info("Now making flat tree.")
@@ -286,7 +291,9 @@ class Command(BaseCommand):
             if node["url"] == 'about:blank':
                 node["ip"] = None
             else:
-                node["ip"] = self.resolve_ip(node["url"])
+                url_ip = self.resolve_ip(node["url"])
+                if url_ip:
+                    node["ip"] = url_ip
             node["locations"] = locations
             node["samples"] = samples
             node["exploits"] = exploits
