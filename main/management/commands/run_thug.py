@@ -39,12 +39,24 @@ from socket import gaierror
 
 import pymongo
 from bson import ObjectId
+import ConfigParser
+import os
+import ast
 
 
 client = pymongo.MongoClient()
 db = client.thug
 
 logger = logging.getLogger(__name__)
+
+config = ConfigParser.ConfigParser()
+config.read(os.path.join(settings.BASE_DIR, "conf", "backend.conf"))
+try:
+    USE_SUDO = ast.literal_eval(config.get('thug', 'use_sudo', 'False'))  # Use sudo command while running Thug
+except ConfigParser.NoSectionError:
+    USE_SUDO = False
+except ValueError:
+    USE_SUDO = False
 
 
 class TimeoutException(Exception):
@@ -324,7 +336,7 @@ class Command(BaseCommand):
         # Initialize args list for docker
         args = [
             "unbuffer",
-            "/usr/bin/sudo", "/usr/bin/docker", "run",
+            "/usr/bin/docker", "run",
             "--rm",
             "-a", "stdin",
             "-a", "stdout",
@@ -334,6 +346,9 @@ class Command(BaseCommand):
             "/usr/bin/python",
             "/opt/thug/src/thug.py",
         ]
+
+        if USE_SUDO:
+            args.insert(1, "/usr/bin/sudo")
 
         # Need to discover the host's docker0 IP address
         # to be used to tell Thug where MongoDB resides
@@ -450,6 +465,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info("Starting up run_thug daemon")
+
+        if USE_SUDO:
+            logger.info("Using SUDO")
+        else:
+            logger.info("Not using SUDO")
+
         # Reset any tasks left behind from previous runs
         logger.debug(
             "Resetting any tasks left in STATUS_PROCESSING by previous runs")

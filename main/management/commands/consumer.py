@@ -22,12 +22,16 @@ import hexdump
 import ConfigParser
 import os
 import threading
+import ast
 
 
 config = ConfigParser.ConfigParser()
 config.read(os.path.join(settings.BASE_DIR, "conf", "backend.conf"))
 BACKEND_HOST = config.get('backend', 'host', 'localhost')  # host of master backend where any queue is located
-IS_BACKEND_MASTER = bool(config.get('backend', 'is_master', 'True'))  # master backend should define the any queue
+try:
+    IS_BACKEND_MASTER = ast.literal_eval(config.get('backend', 'is_master', 'True'))  # master backend should define the any queue
+except ValueError:
+    IS_BACKEND_MASTER = True
 
 
 logger = logging.getLogger(__name__)
