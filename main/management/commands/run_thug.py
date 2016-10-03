@@ -342,9 +342,8 @@ class Command(BaseCommand):
             "-a", "stdout",
             "-a", "stderr",
             "-it",
-            "pdelsante/thug-dockerfile",
-            "/usr/bin/python",
-            "/opt/thug/src/thug.py",
+            "thugsrumal/thug_docker",
+            "thug",
         ]
 
         if USE_SUDO:
