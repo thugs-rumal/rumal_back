@@ -51,12 +51,23 @@ logger = logging.getLogger(__name__)
 
 config = ConfigParser.ConfigParser()
 config.read(os.path.join(settings.BASE_DIR, "conf", "backend.conf"))
+
+# Reads Thug-related config
+# 1 - Use sudo when running Thug (default False)
 try:
-    USE_SUDO = ast.literal_eval(config.get('thug', 'use_sudo', 'False'))  # Use sudo command while running Thug
-except ConfigParser.NoSectionError:
+    USE_SUDO = ast.literal_eval(config.get('thug', 'use_sudo', 'False'))
+except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, ValueError):
     USE_SUDO = False
-except ValueError:
-    USE_SUDO = False
+# 2 - Thug docker image to use (default thugsrumal/thug_docker)
+try:
+    THUG_DOCKER_IMAGE = config.get('thug', 'docker_image', 'thugsrumal/thug_docker')
+except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+    THUG_DOCKER_IMAGE = 'thugsrumal/thug_docker'
+# 3 - Thug docker image tag to use (default latest)
+try:
+    THUG_DOCKER_TAG = config.get('thug', 'docker_tag', 'latest')
+except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+    THUG_DOCKER_TAG = 'latest'
 
 
 class TimeoutException(Exception):
@@ -342,7 +353,7 @@ class Command(BaseCommand):
             "-a", "stdout",
             "-a", "stderr",
             "-it",
-            "thugsrumal/thug_docker",
+            THUG_DOCKER_IMAGE + ":" + THUG_DOCKER_TAG,
             "thug",
         ]
 

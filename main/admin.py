@@ -48,7 +48,7 @@ disable_javaplugin.short_description = 'Disable Java Plugins'
 
 class TaskAdmin(admin.ModelAdmin):
     # list_display = ['__unicode__', 'proxy', 'broken_url']
-    list_display = ['proxy', 'broken_url', 'no_javaplugin']
+    list_display = ['frontend_id', 'status', 'started_on', 'submitted_on', 'completed_on', 'proxy', 'broken_url', 'no_javaplugin']
     date_hierarchy = 'submitted_on'
     actions = [add_broken_url, remove_broken_url,
                enable_javaplugin, disable_javaplugin]
